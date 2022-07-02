@@ -3,7 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TelegramModule } from 'nestjs-telegram';
 
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { Game, GameSchema } from './schemas/game.schema';
 
 @Module({
