@@ -5,10 +5,10 @@ export type GameDocument = Game & Document;
 
 @Schema()
 export class Game {
-  @Prop()
+  @Prop({ required: true })
   playerA: number;
 
-  @Prop()
+  @Prop({ default: null })
   playerB: number;
 }
 

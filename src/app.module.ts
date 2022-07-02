@@ -15,6 +15,5 @@ import { Game, GameSchema } from './schemas/game.schema';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
