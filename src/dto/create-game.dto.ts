@@ -1,3 +1,3 @@
 export class CreateGameDto {
-  playerId: number;
+  playerAId: number;
 }

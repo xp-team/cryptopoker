@@ -1,3 +1,3 @@
 export class ConnectGameDto {
-  playerB: number;
+  playerBId: number;
 }

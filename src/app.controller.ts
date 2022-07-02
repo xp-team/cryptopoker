@@ -30,7 +30,9 @@ export class AppController {
 
   @Post('create')
   createGame(@Body() createGameDto: CreateGameDto): Promise<Game> {
-    const createdGame = new this.gameModel({ playerA: createGameDto.playerId });
+    const createdGame = new this.gameModel({
+      playerA: createGameDto.playerAId,
+    });
     return createdGame.save();
   }
 
@@ -44,7 +46,7 @@ export class AppController {
         _id: gameId,
         playerB: null,
       },
-      { playerB: connectGameDto.playerB },
+      { playerB: connectGameDto.playerBId },
     );
 
     if (game === null) throw new NotFoundException(`Game #${gameId} not found`);
