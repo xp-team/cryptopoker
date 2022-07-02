@@ -1,6 +1,14 @@
-import { Body, Controller, Get, NotFoundException, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { TelegramService } from 'nestjs-telegram';
 
 import { ConnectGameDto } from './dto/connect-game.dto';
 import { CreateGameDto } from './dto/create-game.dto';
@@ -8,7 +16,10 @@ import { Game, GameDocument } from './schemas/game.schema';
 
 @Controller()
 export class AppController {
-  constructor(@InjectModel(Game.name) private gameModel: Model<GameDocument>) {}
+  constructor(
+    @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
+    private readonly telegram: TelegramService,
+  ) {}
 
   @Get()
   games(): Promise<Game[]> {
@@ -38,5 +49,15 @@ export class AppController {
 
     if (game === null) throw new NotFoundException(`Game #${gameId} not found`);
   }
+
+  @Post('telegram')
+  async telegramTest() {
+    console.log(
+      JSON.stringify(
+        await this.telegram.getUpdates({ offset: 809729069 }).toPromise(),
+        null,
+        2,
+      ),
+    );
   }
 }
