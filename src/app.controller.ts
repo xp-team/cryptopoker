@@ -12,25 +12,31 @@ export class AppController {
 
   @Get()
   games(): Promise<Game[]> {
-    return this.gameModel.find({ opened: true }).exec();
+    return this.gameModel
+      .find({ $or: [{ playerA: null }, { playerB: null }] })
+      .exec();
   }
 
   @Post('create')
   createGame(@Body() createGameDto: CreateGameDto): Promise<Game> {
-    const createdGame = new this.gameModel(createGameDto);
+    const createdGame = new this.gameModel({ playerA: createGameDto.playerId });
     return createdGame.save();
   }
 
-  @Post('connect')
-  async connectGame(@Body() connectGameDto: ConnectGameDto) {
+  @Post('connect/:gameId')
+  async connectGame(
+    @Param('gameId') gameId: string,
+    @Body() connectGameDto: ConnectGameDto,
+  ) {
     const game = await this.gameModel.findOneAndUpdate(
       {
-        _id: connectGameDto.id,
-        opened: true,
+        _id: gameId,
+        playerB: null,
       },
-      { opened: false },
+      { playerB: connectGameDto.playerB },
     );
-    if (game === null)
-      throw new NotFoundException(`Game #${connectGameDto.id} not found`);
+
+    if (game === null) throw new NotFoundException(`Game #${gameId} not found`);
+  }
   }
 }

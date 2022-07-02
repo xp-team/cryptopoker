@@ -6,10 +6,10 @@ export type GameDocument = Game & Document;
 @Schema()
 export class Game {
   @Prop()
-  owner: string;
+  playerA: number;
 
-  @Prop({ default: true })
-  opened: boolean;
+  @Prop()
+  playerB: number;
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);

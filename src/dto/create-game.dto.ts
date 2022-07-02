@@ -1,3 +1,3 @@
 export class CreateGameDto {
-  owner: string;
+  playerId: number;
 }
