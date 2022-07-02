@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TelegramModule } from 'nestjs-telegram';
 
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { Game, GameSchema } from './schemas/game.schema';
 
 @Module({
@@ -12,7 +14,9 @@ import { Game, GameSchema } from './schemas/game.schema';
     TelegramModule.forRoot({
       botKey: '5496911846:AAEwqUsPevvgOAeeoMX61nUoFgHKsEvauME',
     }),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

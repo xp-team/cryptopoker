@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { TelegramService } from 'nestjs-telegram';
 import { Table } from 'poker';
 
 import { ConnectGameDto } from './dto/connect-game.dto';
@@ -22,7 +21,6 @@ export class AppController {
 
   constructor(
     @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
-    private readonly telegram: TelegramService,
   ) {}
 
   @Get()
@@ -98,22 +96,5 @@ export class AppController {
       playerB: gameInstance.holeCards()[1],
       communityCards: gameInstance.communityCards(),
     };
-  }
-
-  @Post('telegram')
-  async telegramTest() {
-    await this.telegram
-      .sendMessage({
-        chat_id: 302899890,
-        text: 'Bye looser',
-      })
-      .toPromise();
-    console.log(
-      JSON.stringify(
-        await this.telegram.getUpdates({ offset: 809729069 }).toPromise(),
-        null,
-        2,
-      ),
-    );
   }
 }
