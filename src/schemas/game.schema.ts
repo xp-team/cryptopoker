@@ -7,6 +7,9 @@ export type GameDocument = Game & Document;
 export class Game {
   @Prop()
   owner: string;
+
+  @Prop({ default: true })
+  opened: boolean;
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);
