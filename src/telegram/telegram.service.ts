@@ -154,7 +154,7 @@ It's your turn`,
             chat_id: game.playerBChat,
             text: `Community cards: <not opened yet>
 Your cards: ${playerBCards}
-It's your turn`,
+It's opponent's turn`,
             reply_markup: {
               resize_keyboard: true,
               keyboard: [
@@ -187,7 +187,7 @@ It's your turn`,
           .toPromise();
       } else if (update.message.text.startsWith('Action/')) {
         const match = update.message.text.match(
-          /Action\/(.+)\/(fold|check|call|betn|raise)/,
+          /Action\/(.+)\/(fold|check|call|bet|raise)/,
         );
         if (match === null) {
           await this.telegram

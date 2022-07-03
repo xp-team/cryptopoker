@@ -71,7 +71,7 @@ export class GameService {
 
     return {
       playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
-      playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+      playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
       communityCards: _.cloneDeep(gameInstance.communityCards()),
       winner: [],
     };
@@ -121,7 +121,7 @@ export class GameService {
 
     try {
       playerACards = _.cloneDeep(gameInstance.holeCards()[0]);
-      playerBCards = _.cloneDeep(gameInstance.holeCards()[0]);
+      playerBCards = _.cloneDeep(gameInstance.holeCards()[1]);
       communityCards = _.cloneDeep(gameInstance.communityCards());
     } catch {}
 
@@ -144,7 +144,7 @@ export class GameService {
         gameInstance = this.openedGames[takeActionDto.gameId];
         return {
           playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
-          playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+          playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
           communityCards: _.cloneDeep(gameInstance.communityCards()),
           winner: [game.playerA, game.playerB],
         };
@@ -153,7 +153,7 @@ export class GameService {
         gameInstance = this.openedGames[takeActionDto.gameId];
         return {
           playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
-          playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+          playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
           communityCards: _.cloneDeep(gameInstance.communityCards()),
           winner: [game.playerA],
         };
@@ -162,7 +162,7 @@ export class GameService {
         gameInstance = this.openedGames[takeActionDto.gameId];
         return {
           playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
-          playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+          playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
           communityCards: _.cloneDeep(gameInstance.communityCards()),
           winner: [game.playerB],
         };
@@ -192,7 +192,7 @@ export class GameService {
       gameInstance = this.openedGames[takeActionDto.gameId];
       return {
         playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
-        playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+        playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
         communityCards: _.cloneDeep(gameInstance.communityCards()),
         winner: [pot.eligiblePlayers[0] === 0 ? game.playerA : game.playerB],
       };
