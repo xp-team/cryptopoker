@@ -206,26 +206,6 @@ export class GameService {
     }
   }
 
-  private async getGameStatus(gameId: string) {
-    if (!(gameId in this.openedGames))
-      throw new NotFoundException(`Game #${gameId} not found`);
-    const gameInstance = this.openedGames[gameId];
-
-    const game = await this.gameModel.findOne({
-      _id: gameId,
-    });
-    if (game === null) throw new NotFoundException(`Game #${gameId} not found`);
-
-    return {
-      turnFor: game.turnFor,
-      isBettingRoundInProgress: gameInstance.isBettingRoundInProgress(),
-      isHandInProgress: gameInstance.isHandInProgress(),
-      playerA: gameInstance.holeCards()[0],
-      playerB: gameInstance.holeCards()[1],
-      communityCards: gameInstance.communityCards(),
-    };
-  }
-
   private async resetGame(gameId: string) {
     const game = await this.gameModel.findOne({
       _id: gameId,
