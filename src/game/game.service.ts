@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  NotFoundException,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Table } from 'poker';
@@ -15,43 +8,38 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { TakeActionDto } from './dto/take-action.dto';
 import { Game, GameDocument } from './schemas/game.schema';
 
-@Controller()
-export class AppController {
+@Injectable()
+export class GameService {
   private openedGames: { [key: string]: Table } = {};
 
   constructor(
     @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
   ) {}
 
-  @Get()
   games(): Promise<Game[]> {
     return this.gameModel
       .find({ $or: [{ playerA: null }, { playerB: null }] })
       .exec();
   }
 
-  @Post('create')
-  createGame(@Body() createGameDto: CreateGameDto): Promise<Game> {
+  createGame(createGameDto: CreateGameDto): Promise<Game> {
     const createdGame = new this.gameModel({
       playerA: createGameDto.playerAId,
     });
     return createdGame.save();
   }
 
-  @Post('connect/:gameId')
-  async connectGame(
-    @Param('gameId') gameId: string,
-    @Body() connectGameDto: ConnectGameDto,
-  ) {
+  async connectGame(connectGameDto: ConnectGameDto) {
     const game = await this.gameModel.findOneAndUpdate(
       {
-        _id: gameId,
+        _id: connectGameDto.gameId,
         playerB: null,
       },
       { playerB: connectGameDto.playerBId },
     );
 
-    if (game === null) throw new NotFoundException(`Game #${gameId} not found`);
+    if (game === null)
+      throw new NotFoundException(`Game #${connectGameDto.gameId} not found`);
 
     const gameInstance = new Table({
       ante: 0,
@@ -61,18 +49,14 @@ export class AppController {
     gameInstance.sitDown(0, 100);
     gameInstance.sitDown(1, 100);
     gameInstance.startHand();
-    this.openedGames[gameId] = gameInstance;
+    this.openedGames[connectGameDto.gameId] = gameInstance;
   }
 
-  @Post('action/:gameId')
-  async takeGameAction(
-    @Param('gameId') gameId: string,
-    @Body() takeActionDto: TakeActionDto,
-  ) {
-    if (!(gameId in this.openedGames))
-      throw new NotFoundException(`Game #${gameId} not found`);
+  async takeGameAction(takeActionDto: TakeActionDto) {
+    if (!(takeActionDto.gameId in this.openedGames))
+      throw new NotFoundException(`Game #${takeActionDto.gameId} not found`);
 
-    const gameInstance = this.openedGames[gameId];
+    const gameInstance = this.openedGames[takeActionDto.gameId];
 
     if (takeActionDto.betSize)
       gameInstance.actionTaken(takeActionDto.action, takeActionDto.betSize);
@@ -82,8 +66,7 @@ export class AppController {
       gameInstance.endBettingRound();
   }
 
-  @Get('status/:gameId')
-  async getGameStatus(@Param('gameId') gameId: string) {
+  async getGameStatus(gameId: string) {
     if (!(gameId in this.openedGames))
       throw new NotFoundException(`Game #${gameId} not found`);
 

@@ -1,14 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import _ from 'lodash';
-import { TelegramService } from 'nestjs-telegram';
+import { TelegramService as TelegramServiceNest } from 'nestjs-telegram';
+
+import { GameService } from '../game/game.service';
 
 @Injectable()
-export class AppService {
+export class TelegramService {
   private inProgress = false;
   private lastUpdate = 0;
 
-  constructor(private readonly telegram: TelegramService) {}
+  constructor(
+    private readonly telegram: TelegramServiceNest,
+    private readonly gameService: GameService,
+  ) {}
 
   @Cron(CronExpression.EVERY_SECOND)
   async handleCron() {
@@ -29,14 +34,22 @@ export class AppService {
     if (updates.length) this.lastUpdate = _.last(updates).update_id + 1;
 
     for (const update of updates) {
-      if (update.message && update.message.text === 'Hello')
+      if (!update.message) continue;
+
+      if (update.message.text === 'Hello')
         await this.telegram
           .sendMessage({
             chat_id: update.message.chat.id,
             text: 'You said Hello',
+            reply_markup: {
+              keyboard: [
+                [{ text: 'Search for games' }],
+                [{ text: 'Create game' }],
+              ],
+            },
           })
           .toPromise();
-      else if (update.message)
+      else
         await this.telegram
           .sendMessage({
             chat_id: update.message?.chat.id,
