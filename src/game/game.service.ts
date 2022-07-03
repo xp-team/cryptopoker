@@ -15,7 +15,7 @@ import { CreateGameDto } from './dto/create-game.dto';
 import { TakeActionDto } from './dto/take-action.dto';
 import { Game, GameDocument } from './schemas/game.schema';
 
-interface IntermediateResult {
+export interface IntermediateResult {
   communityCards: Card[];
   playerACards: Hand | null;
   playerBCards: Hand | null;
@@ -46,7 +46,9 @@ export class GameService {
     return createdGame.save();
   }
 
-  async connectGame(connectGameDto: ConnectGameDto): Promise<GameDocument> {
+  async connectGame(
+    connectGameDto: ConnectGameDto,
+  ): Promise<IntermediateResult> {
     let game = await this.gameModel.findOneAndUpdate(
       {
         _id: connectGameDto.gameId,
@@ -65,8 +67,14 @@ export class GameService {
       throw new NotFoundException(`Game #${connectGameDto.gameId} not found`);
 
     await this.resetGame(connectGameDto.gameId);
+    const gameInstance = this.openedGames[connectGameDto.gameId];
 
-    return game;
+    return {
+      playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
+      playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+      communityCards: _.cloneDeep(gameInstance.communityCards()),
+      winner: [],
+    };
   }
 
   async takeGameAction(

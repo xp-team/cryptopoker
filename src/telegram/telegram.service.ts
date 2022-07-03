@@ -6,9 +6,9 @@ import { Model } from 'mongoose';
 import { TelegramService as TelegramServiceNest } from 'nestjs-telegram';
 import { ActionTypes } from 'poker';
 
-import { GameService } from '../game/game.service';
+import { GameService, IntermediateResult } from '../game/game.service';
 import { Game, GameDocument } from '../game/schemas/game.schema';
-import { emojifyCard } from './utils/emojifyCard.util';
+import { emojifyCard, emojifyHand } from './utils/emojify.util';
 
 @Injectable()
 export class TelegramService {
@@ -101,13 +101,15 @@ Wait a little and try again or create one by your own`,
           continue;
         }
 
-        let game: GameDocument = null;
+        let game: GameDocument | null = null;
+        let res: IntermediateResult | null = null;
         try {
-          game = await this.gameService.connectGame({
+          res = await this.gameService.connectGame({
             gameId: match[0],
             playerBId: update.message.from.id,
             chatBId: update.message.chat.id,
           });
+          game = await this.gameModel.findOne({ _id: match[0] });
         } catch (e) {
           this.logger.error(e);
           await this.telegram
@@ -126,11 +128,14 @@ Wait a little and try again or create one by your own`,
           continue;
         }
 
+        const playerACards = emojifyHand(res.playerACards).join('|');
+        const playerBCards = emojifyHand(res.playerBCards).join('|');
+
         await this.telegram
           .sendMessage({
             chat_id: game.playerAChat,
-            text: `Pre-flop. 
-House money: 3 TON. Your money: 99 TON. 
+            text: `Community cards: <no opened yet>
+Your cards: ${playerACards}
 It's your turn`,
             reply_markup: {
               resize_keyboard: true,
@@ -147,9 +152,9 @@ It's your turn`,
         await this.telegram
           .sendMessage({
             chat_id: game.playerBChat,
-            text: `Pre-flop.
-House money: 3 TON. Your money: 98 TON.
-It's opponent's turn`,
+            text: `Community cards: <not opened yet>
+Your cards: ${playerBCards}
+It's your turn`,
             reply_markup: {
               resize_keyboard: true,
               keyboard: [
@@ -211,8 +216,8 @@ It's opponent's turn`,
 
           const game = await this.gameModel.findOne({ _id: gameId });
           const communityCards = res.communityCards.map(emojifyCard).join('|');
-          const playerACards = emojifyCard(res.playerACards).join('|');
-          const playerBCards = emojifyCard(res.playerBCards).join('|');
+          const playerACards = emojifyHand(res.playerACards).join('|');
+          const playerBCards = emojifyHand(res.playerBCards).join('|');
 
           const draw = res.winner.length === 2;
           const playerAWon =
