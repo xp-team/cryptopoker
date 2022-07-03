@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TelegramModule as TelegramModuleNest } from 'nestjs-telegram';
 
 import { GameModule } from '../game/game.module';
+import { Game, GameSchema } from '../game/schemas/game.schema';
 import { TelegramService } from './telegram.service';
 
 @Module({
@@ -12,6 +14,7 @@ import { TelegramService } from './telegram.service';
     }),
     ScheduleModule.forRoot(),
     GameModule,
+    MongooseModule.forFeature([{ name: Game.name, schema: GameSchema }]),
   ],
   providers: [TelegramService],
 })

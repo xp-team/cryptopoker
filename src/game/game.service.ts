@@ -6,13 +6,21 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import _ from 'lodash';
 import { Model } from 'mongoose';
-import { Table } from 'poker';
+import { Card, Hand, Table } from 'poker';
 
 import { ConnectGameDto } from './dto/connect-game.dto';
 import { CreateGameDto } from './dto/create-game.dto';
 import { TakeActionDto } from './dto/take-action.dto';
 import { Game, GameDocument } from './schemas/game.schema';
+
+interface IntermediateResult {
+  communityCards: Card[];
+  playerACards: Hand | null;
+  playerBCards: Hand | null;
+  winner: number[];
+}
 
 @Injectable()
 export class GameService {
@@ -54,27 +62,14 @@ export class GameService {
     if (game === null)
       throw new NotFoundException(`Game #${connectGameDto.gameId} not found`);
 
-    const gameInstance = new Table({
-      ante: 0,
-      smallBlind: 1,
-      bigBlind: 2,
-    });
-    gameInstance.sitDown(0, 100);
-    gameInstance.sitDown(1, 100);
-    gameInstance.startHand();
-    this.openedGames[connectGameDto.gameId] = gameInstance;
-
-    await this.gameModel.updateOne(
-      {
-        _id: game.id,
-      },
-      { turnFor: game.playerA },
-    );
+    await this.resetGame(connectGameDto.gameId);
 
     return game;
   }
 
-  async takeGameAction(takeActionDto: TakeActionDto) {
+  async takeGameAction(
+    takeActionDto: TakeActionDto,
+  ): Promise<IntermediateResult> {
     if (!(takeActionDto.gameId in this.openedGames))
       throw new NotFoundException(`Game #${takeActionDto.gameId} not found`);
 
@@ -108,17 +103,56 @@ export class GameService {
     if (gameInstance.isBettingRoundInProgress() === false)
       gameInstance.endBettingRound();
 
+    let playerACards: Hand | null = null;
+    let playerBCards: Hand | null = null;
+    let communityCards = [];
+    const seatA = gameInstance.seats()[0];
+    const seatB = gameInstance.seats()[1];
+
+    try {
+      playerACards = _.cloneDeep(gameInstance.holeCards()[0]);
+      playerBCards = _.cloneDeep(gameInstance.holeCards()[0]);
+      communityCards = _.cloneDeep(gameInstance.communityCards());
+    } catch {}
+
     try {
       gameInstance.showdown();
+
+      await this.gameModel.updateOne(
+        { _id: game.id },
+        {
+          playerABalance: seatA.totalChips,
+          playerBBalance: seatB.totalChips,
+        },
+      );
+
       if (
         gameInstance.seats()[0].totalChips === game.playerABalance &&
         gameInstance.seats()[1].totalChips === game.playerBBalance
       ) {
-        return {};
+        await this.resetGame(game.id);
+        return {
+          playerACards,
+          playerBCards,
+          communityCards,
+          winner: [game.playerA, game.playerB],
+        };
       } else if (gameInstance.seats()[0].totalChips > game.playerABalance) {
-        // player 1 won
+        await this.resetGame(game.id);
+        return {
+          playerACards,
+          playerBCards,
+          communityCards,
+          winner: [game.playerA],
+        };
       } else {
-        // player 2 won
+        await this.resetGame(game.id);
+        return {
+          playerACards,
+          playerBCards,
+          communityCards,
+          winner: [game.playerB],
+        };
       }
     } catch {}
 
@@ -141,20 +175,13 @@ export class GameService {
             },
       );
 
-      this.openedGames[takeActionDto.gameId] = new Table({
-        ante: 0,
-        smallBlind: 1,
-        bigBlind: 2,
-      });
-      gameInstance.sitDown(0, game.playerABalance);
-      gameInstance.sitDown(1, game.playerBBalance);
-      gameInstance.startHand();
+      await this.resetGame(game.id);
 
       return {
-        communityCards: gameInstance.communityCards(),
-        playerACards: [],
-        playerBCards: [],
-        winner: pot.eligiblePlayers[0] === 0 ? game.playerA : game.playerB,
+        communityCards,
+        playerACards,
+        playerBCards,
+        winner: [pot.eligiblePlayers[0] === 0 ? game.playerA : game.playerB],
       };
     } else {
       await this.gameModel.updateOne(
@@ -167,10 +194,10 @@ export class GameService {
       );
 
       return {
-        communityCards: gameInstance.communityCards(),
-        playerACards: gameInstance.holeCards()[0],
-        playerBCards: gameInstance.holeCards()[1],
-        winner: null,
+        communityCards,
+        playerACards,
+        playerBCards,
+        winner: [],
       };
     }
   }
@@ -193,5 +220,30 @@ export class GameService {
       playerB: gameInstance.holeCards()[1],
       communityCards: gameInstance.communityCards(),
     };
+  }
+
+  private async resetGame(gameId: string) {
+    const game = await this.gameModel.findOne({
+      _id: gameId,
+    });
+    const gameInstance = new Table({
+      ante: 0,
+      smallBlind: 1,
+      bigBlind: 2,
+    });
+
+    this.openedGames[gameId] = gameInstance;
+    gameInstance.sitDown(0, game.playerABalance);
+    gameInstance.sitDown(1, game.playerBBalance);
+    gameInstance.startHand();
+
+    await this.gameModel.updateOne(
+      {
+        _id: game.id,
+      },
+      {
+        turnFor: game.playerA,
+      },
+    );
   }
 }

@@ -106,6 +106,16 @@ export class TelegramService {
           .sendMessage({
             chat_id: update.message.chat.id,
             text: "Pre-flop. House money: 3 TON. Your money: 98 TON. It's turn of player A",
+            reply_markup: {
+              resize_keyboard: true,
+              keyboard: [
+                [{ text: `Action/${game.id}/fold` }],
+                [{ text: `Action/${game.id}/check` }],
+                [{ text: `Action/${game.id}/call` }],
+                [{ text: `Action/${game.id}/bet` }],
+                [{ text: `Action/${game.id}/raise` }],
+              ],
+            },
           })
           .toPromise();
         await this.telegram

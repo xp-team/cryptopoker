@@ -6,7 +6,6 @@ import { Game, GameSchema } from './schemas/game.schema';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/poker'),
     MongooseModule.forFeature([{ name: Game.name, schema: GameSchema }]),
   ],
   providers: [GameService],

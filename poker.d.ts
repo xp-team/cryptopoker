@@ -14,10 +14,7 @@ declare module 'poker' {
     ): void;
     isBettingRoundInProgress(): boolean;
     isHandInProgress(): boolean;
-    holeCards(): {
-      first: Card;
-      second: Card;
-    }[];
+    holeCards(): Hand[];
     communityCards(): Card[];
     endBettingRound(): void;
     pots(): Pot[];
@@ -26,6 +23,11 @@ declare module 'poker' {
   }
 
   type ActionTypes = 'fold' | 'check' | 'call' | 'bet' | 'raise';
+
+  interface Hand {
+    first: Card;
+    second: Card;
+  }
 
   interface Card {
     rank: CardRank;
