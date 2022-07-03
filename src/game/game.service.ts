@@ -42,7 +42,6 @@ export class GameService {
     const createdGame = new this.gameModel({
       playerA: createGameDto.playerAId,
       playerAChat: createGameDto.chatAId,
-      turnFor: createGameDto.playerAId,
     });
     return createdGame.save();
   }
