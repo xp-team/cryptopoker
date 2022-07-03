@@ -71,7 +71,10 @@ Wait a little and try again or create one by your own`,
               reply_markup: {
                 resize_keyboard: true,
                 force_reply: true,
-                keyboard: games.map((g) => [{ text: `Connect/${g.id}` }]),
+                keyboard: [
+                  [{ text: '🔙 Go back' }],
+                  ...games.map((g) => [{ text: `Connect/${g.id}` }]),
+                ],
               },
             })
             .toPromise();
