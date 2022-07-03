@@ -26,17 +26,23 @@ export class GameService {
     const createdGame = new this.gameModel({
       playerA: createGameDto.playerAId,
       playerAChat: createGameDto.chatAId,
+      turnFor: createGameDto.playerAId,
     });
     return createdGame.save();
   }
 
-  async connectGame(connectGameDto: ConnectGameDto) {
+  async connectGame(connectGameDto: ConnectGameDto): Promise<GameDocument> {
     const game = await this.gameModel.findOneAndUpdate(
       {
         _id: connectGameDto.gameId,
         playerB: null,
+        playerBChat: null,
       },
-      { playerB: connectGameDto.playerBId },
+      {
+        playerB: connectGameDto.playerBId,
+        playerBChat: connectGameDto.chatBId,
+        turnFor: connectGameDto.playerBId,
+      },
     );
 
     if (game === null)
@@ -51,6 +57,8 @@ export class GameService {
     gameInstance.sitDown(1, 100);
     gameInstance.startHand();
     this.openedGames[connectGameDto.gameId] = gameInstance;
+
+    return game;
   }
 
   async takeGameAction(takeActionDto: TakeActionDto) {

@@ -1,4 +1,5 @@
 export class ConnectGameDto {
-  playerBId: number;
   gameId: string;
+  playerBId: number;
+  chatBId: number;
 }

@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { TelegramService as TelegramServiceNest } from 'nestjs-telegram';
 
 import { GameService } from '../game/game.service';
+import { GameDocument } from '../game/schemas/game.schema';
 
 @Injectable()
 export class TelegramService {
@@ -53,13 +54,14 @@ export class TelegramService {
           })
           .toPromise();
       } else if (update.message.text.startsWith('Connect/')) {
-        const match = update.message.text.match(/(?<=connect\/).*/);
+        const match = update.message.text.match(/(?<=Connect\/).*/);
         if (match === null) {
           await this.telegram
             .sendMessage({
               chat_id: update.message.chat.id,
               text: 'Invalid input',
               reply_markup: {
+                resize_keyboard: true,
                 keyboard: [
                   [{ text: 'Available games' }],
                   [{ text: 'Create game' }],
@@ -70,11 +72,12 @@ export class TelegramService {
           continue;
         }
 
-        let game = null;
+        let game: GameDocument = null;
         try {
           game = await this.gameService.connectGame({
             gameId: match[0],
             playerBId: update.message.from.id,
+            chatBId: update.message.chat.id,
           });
         } catch (e) {
           this.logger.error(e);
@@ -83,6 +86,7 @@ export class TelegramService {
               chat_id: update.message.chat.id,
               text: `Could not connect to the game ${match[0]}`,
               reply_markup: {
+                resize_keyboard: true,
                 keyboard: [
                   [{ text: 'Available games' }],
                   [{ text: 'Create game' }],
@@ -92,6 +96,29 @@ export class TelegramService {
             .toPromise();
           continue;
         }
+
+        await this.telegram
+          .sendMessage({
+            chat_id: update.message.chat.id,
+            text: "Pre-flop. It's turn of player A",
+          })
+          .toPromise();
+        await this.telegram
+          .sendMessage({
+            chat_id: game.playerAChat,
+            text: "Pre-flop. It's your turn",
+            reply_markup: {
+              resize_keyboard: true,
+              keyboard: [
+                [{ text: `Action/${game.id}/fold` }],
+                [{ text: `Action/${game.id}/check` }],
+                [{ text: `Action/${game.id}/call` }],
+                [{ text: `Action/${game.id}/bet` }],
+                [{ text: `Action/${game.id}/raise` }],
+              ],
+            },
+          })
+          .toPromise();
       } else if (update.message.text === 'Create game') {
         const game = await this.gameService.createGame({
           playerAId: update.message.from.id,

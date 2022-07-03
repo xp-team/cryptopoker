@@ -16,6 +16,9 @@ export class Game {
 
   @Prop({ default: null })
   playerBChat: number;
+
+  @Prop({ required: true })
+  turnFor: number;
 }
 
 export const GameSchema = SchemaFactory.createForClass(Game);
