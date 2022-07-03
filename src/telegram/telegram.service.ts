@@ -134,7 +134,7 @@ Wait a little and try again or create one by your own`,
         await this.telegram
           .sendMessage({
             chat_id: game.playerAChat,
-            text: `Community cards: <no opened yet>
+            text: `Cards on the table: <no opened yet>
 Your cards: ${playerACards}
 It's your turn`,
             reply_markup: {
@@ -152,7 +152,7 @@ It's your turn`,
         await this.telegram
           .sendMessage({
             chat_id: game.playerBChat,
-            text: `Community cards: <not opened yet>
+            text: `Cards on the table: <not opened yet>
 Your cards: ${playerBCards}
 It's opponent's turn`,
             reply_markup: {
@@ -231,7 +231,7 @@ It's opponent's turn`,
                 chat_id: game.playerAChat,
                 text: `It's draw. 
 Started a new game. It's your turn.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerACards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -250,7 +250,7 @@ Your cards: ${playerACards}`,
                 chat_id: game.playerBChat,
                 text: `It's draw. 
 Started a new game. It's opponent's turn.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerBCards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -270,7 +270,7 @@ Your cards: ${playerBCards}`,
                 chat_id: game.playerAChat,
                 text: `You won. 
 Started a new game. It's your turn.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerACards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -289,7 +289,7 @@ Your cards: ${playerACards}`,
                 chat_id: game.playerBChat,
                 text: `You lost. 
 Started a new game. It's opponent's turn.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerBCards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -309,7 +309,7 @@ Your cards: ${playerBCards}`,
                 chat_id: game.playerAChat,
                 text: `You lost. 
 Started a new game. It's your turn.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerACards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -328,7 +328,7 @@ Your cards: ${playerACards}`,
                 chat_id: game.playerBChat,
                 text: `You won. 
 Started a new game. It's opponent's turn.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerBCards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -351,7 +351,7 @@ Your cards: ${playerBCards}`,
                     ? "It's your turn"
                     : "It's opponent's turn"
                 }.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerACards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -373,7 +373,7 @@ Your cards: ${playerACards}`,
                     ? "It's your turn"
                     : "It's opponent's turn"
                 }.
-Community cards: ${communityCards}
+Cards on the table: ${communityCards}
 Your cards: ${playerBCards}`,
                 reply_markup: {
                   resize_keyboard: true,
