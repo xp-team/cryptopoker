@@ -47,7 +47,7 @@ export class GameService {
   }
 
   async connectGame(connectGameDto: ConnectGameDto): Promise<GameDocument> {
-    const game = await this.gameModel.findOneAndUpdate(
+    let game = await this.gameModel.findOneAndUpdate(
       {
         _id: connectGameDto.gameId,
         playerB: null,
@@ -58,6 +58,9 @@ export class GameService {
         playerBChat: connectGameDto.chatBId,
       },
     );
+    game = await this.gameModel.findOne({
+      _id: connectGameDto.gameId,
+    });
     if (game === null)
       throw new NotFoundException(`Game #${connectGameDto.gameId} not found`);
 

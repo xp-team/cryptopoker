@@ -128,8 +128,10 @@ Wait a little and try again or create one by your own`,
 
         await this.telegram
           .sendMessage({
-            chat_id: update.message.chat.id,
-            text: "Pre-flop. House money: 3 TON. Your money: 98 TON. It's turn of player A",
+            chat_id: game.playerAChat,
+            text: `Pre-flop. 
+House money: 3 TON. Your money: 99 TON. 
+It's your turn`,
             reply_markup: {
               resize_keyboard: true,
               keyboard: [
@@ -144,8 +146,10 @@ Wait a little and try again or create one by your own`,
           .toPromise();
         await this.telegram
           .sendMessage({
-            chat_id: game.playerAChat,
-            text: "Pre-flop. House money: 3 TON. Your money: 99 TON. It's your turn",
+            chat_id: game.playerBChat,
+            text: `Pre-flop.
+House money: 3 TON. Your money: 98 TON.
+It's opponent's turn`,
             reply_markup: {
               resize_keyboard: true,
               keyboard: [
