@@ -390,7 +390,7 @@ Your cards: ${playerBCards}`,
             await this.telegram
               .sendMessage({
                 chat_id: update.message.chat.id,
-                text: "It's probably not your turn or you clicked illegal action",
+                text: "It's probably not your turn or you selected an illegal action",
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -407,7 +407,7 @@ Your cards: ${playerBCards}`,
             await this.telegram
               .sendMessage({
                 chat_id: update.message.chat.id,
-                text: "Probably game doesn't exist or you not part of it",
+                text: "Probably, picked game doesn't exist or you not part of it",
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
