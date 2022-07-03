@@ -1,11 +1,14 @@
 import { Injectable, Logger, NotAcceptableException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import _ from 'lodash';
+import { Model } from 'mongoose';
 import { TelegramService as TelegramServiceNest } from 'nestjs-telegram';
 import { ActionTypes } from 'poker';
 
 import { GameService } from '../game/game.service';
-import { GameDocument } from '../game/schemas/game.schema';
+import { Game, GameDocument } from '../game/schemas/game.schema';
+import { emojifyCard } from './utils/emojifyCard.util';
 
 @Injectable()
 export class TelegramService {
@@ -17,6 +20,7 @@ export class TelegramService {
   constructor(
     private readonly telegram: TelegramServiceNest,
     private readonly gameService: GameService,
+    @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
   ) {}
 
   @Cron(CronExpression.EVERY_SECOND)
@@ -174,12 +178,187 @@ export class TelegramService {
         }
         const [, gameId, action] = match as [string, string, ActionTypes];
         try {
-          await this.gameService.takeGameAction({
+          const res = await this.gameService.takeGameAction({
             action,
             gameId,
             playerId: update.message.from.id,
             betSize: action === 'bet' || action === 'raise' ? 5 : undefined,
           });
+
+          const game = await this.gameModel.findOne({ _id: gameId });
+          const communityCards = res.communityCards.map(emojifyCard).join('|');
+          const playerACards = emojifyCard(res.playerACards).join('|');
+          const playerBCards = emojifyCard(res.playerBCards).join('|');
+
+          const draw = res.winner.length === 2;
+          const playerAWon =
+            res.winner.length === 1 && res.winner[0] === game.playerA;
+          const playerBWon =
+            res.winner.length === 1 && res.winner[0] === game.playerB;
+
+          if (draw) {
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerAChat,
+                text: `It's draw. 
+Started a new game. It's your turn.
+Community cards: ${communityCards}
+Your cards: ${playerACards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerBChat,
+                text: `It's draw. 
+Started a new game. It's opponent's turn.
+Community cards: ${communityCards}
+Your cards: ${playerBCards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+          } else if (playerAWon) {
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerAChat,
+                text: `You won. 
+Started a new game. It's your turn.
+Community cards: ${communityCards}
+Your cards: ${playerACards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerBChat,
+                text: `You lost. 
+Started a new game. It's opponent's turn.
+Community cards: ${communityCards}
+Your cards: ${playerBCards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+          } else if (playerBWon) {
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerAChat,
+                text: `You lost. 
+Started a new game. It's your turn.
+Community cards: ${communityCards}
+Your cards: ${playerACards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerBChat,
+                text: `You won. 
+Started a new game. It's opponent's turn.
+Community cards: ${communityCards}
+Your cards: ${playerBCards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+          } else {
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerAChat,
+                text: `${
+                  game.turnFor === game.playerA
+                    ? "It's your turn"
+                    : "It's opponent's turn"
+                }.
+Community cards: ${communityCards}
+Your cards: ${playerACards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+            await this.telegram
+              .sendMessage({
+                chat_id: game.playerBChat,
+                text: `${
+                  game.turnFor === game.playerB
+                    ? "It's your turn"
+                    : "It's opponent's turn"
+                }.
+Community cards: ${communityCards}
+Your cards: ${playerBCards}`,
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+          }
         } catch (e) {
           this.logger.error(e);
 

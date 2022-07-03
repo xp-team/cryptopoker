@@ -89,7 +89,7 @@ export class GameService {
     else if (game.turnFor !== takeActionDto.playerId)
       throw new NotAcceptableException(`It's not your turn`);
 
-    const gameInstance = this.openedGames[takeActionDto.gameId];
+    let gameInstance = this.openedGames[takeActionDto.gameId];
 
     try {
       if (takeActionDto.betSize)
@@ -131,26 +131,29 @@ export class GameService {
         gameInstance.seats()[1].totalChips === game.playerBBalance
       ) {
         await this.resetGame(game.id);
+        gameInstance = this.openedGames[takeActionDto.gameId];
         return {
-          playerACards,
-          playerBCards,
-          communityCards,
+          playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
+          playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+          communityCards: _.cloneDeep(gameInstance.communityCards()),
           winner: [game.playerA, game.playerB],
         };
       } else if (gameInstance.seats()[0].totalChips > game.playerABalance) {
         await this.resetGame(game.id);
+        gameInstance = this.openedGames[takeActionDto.gameId];
         return {
-          playerACards,
-          playerBCards,
-          communityCards,
+          playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
+          playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+          communityCards: _.cloneDeep(gameInstance.communityCards()),
           winner: [game.playerA],
         };
       } else {
         await this.resetGame(game.id);
+        gameInstance = this.openedGames[takeActionDto.gameId];
         return {
-          playerACards,
-          playerBCards,
-          communityCards,
+          playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
+          playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+          communityCards: _.cloneDeep(gameInstance.communityCards()),
           winner: [game.playerB],
         };
       }
@@ -176,11 +179,11 @@ export class GameService {
       );
 
       await this.resetGame(game.id);
-
+      gameInstance = this.openedGames[takeActionDto.gameId];
       return {
-        communityCards,
-        playerACards,
-        playerBCards,
+        playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
+        playerBCards: _.cloneDeep(gameInstance.holeCards()[0]),
+        communityCards: _.cloneDeep(gameInstance.communityCards()),
         winner: [pot.eligiblePlayers[0] === 0 ? game.playerA : game.playerB],
       };
     } else {
@@ -190,6 +193,8 @@ export class GameService {
         },
         {
           turnFor: game.turnFor === game.playerA ? game.playerB : game.playerA,
+          playerABalance: seatA.totalChips,
+          playerBBalance: seatB.totalChips,
         },
       );
 
