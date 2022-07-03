@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotAcceptableException } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import _ from 'lodash';
 import { TelegramService as TelegramServiceNest } from 'nestjs-telegram';
+import { ActionTypes } from 'poker';
 
 import { GameService } from '../game/game.service';
 import { GameDocument } from '../game/schemas/game.schema';
@@ -54,6 +55,10 @@ export class TelegramService {
           })
           .toPromise();
       } else if (update.message.text.startsWith('Connect/')) {
+        /**
+         * TODO: Add crypto hook (after all check below)
+         */
+
         const match = update.message.text.match(/(?<=Connect\/).*/);
         if (match === null) {
           await this.telegram
@@ -100,13 +105,13 @@ export class TelegramService {
         await this.telegram
           .sendMessage({
             chat_id: update.message.chat.id,
-            text: "Pre-flop. It's turn of player A",
+            text: "Pre-flop. House money: 3 TON. Your money: 98 TON. It's turn of player A",
           })
           .toPromise();
         await this.telegram
           .sendMessage({
             chat_id: game.playerAChat,
-            text: "Pre-flop. It's your turn",
+            text: "Pre-flop. House money: 3 TON. Your money: 99 TON. It's your turn",
             reply_markup: {
               resize_keyboard: true,
               keyboard: [
@@ -137,11 +142,75 @@ export class TelegramService {
             },
           })
           .toPromise();
+      } else if (update.message.text.startsWith('Action/')) {
+        const match = update.message.text.match(
+          /Action\/(.+)\/(fold|check|call|betn|raise)/,
+        );
+        if (match === null) {
+          await this.telegram
+            .sendMessage({
+              chat_id: update.message.chat.id,
+              text: 'Invalid input',
+              reply_markup: {
+                resize_keyboard: true,
+                keyboard: [
+                  [{ text: 'Available games' }],
+                  [{ text: 'Create game' }],
+                ],
+              },
+            })
+            .toPromise();
+          continue;
+        }
+        const [, gameId, action] = match as [string, string, ActionTypes];
+        try {
+          await this.gameService.takeGameAction({
+            action,
+            gameId,
+            playerId: update.message.from.id,
+            betSize: action === 'bet' || action === 'raise' ? 5 : undefined,
+          });
+        } catch (e) {
+          this.logger.error(e);
+
+          if (e instanceof NotAcceptableException) {
+            await this.telegram
+              .sendMessage({
+                chat_id: update.message.chat.id,
+                text: "It's probably not your turn or you clicked illegal action",
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: `Action/${gameId}/fold` }],
+                    [{ text: `Action/${gameId}/check` }],
+                    [{ text: `Action/${gameId}/call` }],
+                    [{ text: `Action/${gameId}/bet` }],
+                    [{ text: `Action/${gameId}/raise` }],
+                  ],
+                },
+              })
+              .toPromise();
+          } else {
+            await this.telegram
+              .sendMessage({
+                chat_id: update.message.chat.id,
+                text: "Probably game doesn't exist or you not part of it",
+                reply_markup: {
+                  resize_keyboard: true,
+                  keyboard: [
+                    [{ text: 'Available games' }],
+                    [{ text: 'Create game' }],
+                  ],
+                },
+              })
+              .toPromise();
+          }
+        }
       } else {
         await this.telegram
           .sendMessage({
             chat_id: update.message.chat.id,
-            text: `We didn't understand you. Please, try the commands below`,
+            text: "We didn't understand you. Please, try the commands below",
             reply_markup: {
               resize_keyboard: true,
               keyboard: [

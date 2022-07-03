@@ -1,5 +1,8 @@
+import { ActionTypes } from 'poker';
+
 export class TakeActionDto {
-  action: 'fold' | 'check' | 'call' | 'bet' | 'raise';
+  action: ActionTypes;
   betSize?: number;
   gameId: string;
+  playerId: number;
 }

@@ -20,28 +20,44 @@ declare module 'poker' {
     }[];
     communityCards(): Card[];
     endBettingRound(): void;
+    pots(): Pot[];
+    showdown(): void;
+    seats(): Seat[];
+  }
+
+  type ActionTypes = 'fold' | 'check' | 'call' | 'bet' | 'raise';
+
+  interface Card {
+    rank: CardRank;
+    suit: CardSuit;
+  }
+
+  type CardRank =
+    | '1'
+    | '2'
+    | '3'
+    | '4'
+    | '5'
+    | '6'
+    | '7'
+    | '8'
+    | '9'
+    | 'T'
+    | 'J'
+    | 'Q'
+    | 'K'
+    | 'A';
+
+  type CardSuit = 'spades' | 'hearts' | 'clubs' | 'diamonds';
+
+  interface Pot {
+    size: number;
+    eligiblePlayers: number[];
+  }
+
+  interface Seat {
+    betSize: number;
+    totalChips: number;
+    stackSize: number;
   }
 }
-
-interface Card {
-  rank: CardRank;
-  suit: CardSuit;
-}
-
-type CardRank =
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | '5'
-  | '6'
-  | '7'
-  | '8'
-  | '9'
-  | 'T'
-  | 'J'
-  | 'Q'
-  | 'K'
-  | 'A';
-
-type CardSuit = 'spades' | 'hearts' | 'clubs' | 'diamonds';

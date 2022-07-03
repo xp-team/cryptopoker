@@ -11,13 +11,19 @@ export class Game {
   @Prop({ required: true })
   playerAChat: number;
 
+  @Prop({ default: 100 })
+  playerABalance: number;
+
   @Prop({ default: null })
   playerB: number;
 
   @Prop({ default: null })
   playerBChat: number;
 
-  @Prop({ required: true })
+  @Prop({ default: 100 })
+  playerBBalance: number;
+
+  @Prop({ default: null })
   turnFor: number;
 }
 

@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Table } from 'poker';
@@ -10,6 +16,8 @@ import { Game, GameDocument } from './schemas/game.schema';
 
 @Injectable()
 export class GameService {
+  private readonly logger = new Logger(GameService.name);
+
   private openedGames: { [key: string]: Table } = {};
 
   constructor(
@@ -41,10 +49,8 @@ export class GameService {
       {
         playerB: connectGameDto.playerBId,
         playerBChat: connectGameDto.chatBId,
-        turnFor: connectGameDto.playerBId,
       },
     );
-
     if (game === null)
       throw new NotFoundException(`Game #${connectGameDto.gameId} not found`);
 
@@ -58,6 +64,13 @@ export class GameService {
     gameInstance.startHand();
     this.openedGames[connectGameDto.gameId] = gameInstance;
 
+    await this.gameModel.updateOne(
+      {
+        _id: game.id,
+      },
+      { turnFor: game.playerA },
+    );
+
     return game;
   }
 
@@ -65,23 +78,115 @@ export class GameService {
     if (!(takeActionDto.gameId in this.openedGames))
       throw new NotFoundException(`Game #${takeActionDto.gameId} not found`);
 
+    let game = await this.gameModel.findOne({
+      _id: takeActionDto.gameId,
+    });
+
+    if (game === null)
+      throw new NotFoundException(`Game #${takeActionDto.gameId} not found`);
+    else if (
+      !(
+        game.playerA === takeActionDto.playerId ||
+        game.playerB === takeActionDto.playerId
+      )
+    )
+      throw new ForbiddenException(`Your not playing this game`);
+    else if (game.turnFor !== takeActionDto.playerId)
+      throw new NotAcceptableException(`It's not your turn`);
+
     const gameInstance = this.openedGames[takeActionDto.gameId];
 
-    if (takeActionDto.betSize)
-      gameInstance.actionTaken(takeActionDto.action, takeActionDto.betSize);
-    else gameInstance.actionTaken(takeActionDto.action);
+    try {
+      if (takeActionDto.betSize)
+        gameInstance.actionTaken(takeActionDto.action, takeActionDto.betSize);
+      else gameInstance.actionTaken(takeActionDto.action);
+    } catch (e) {
+      this.logger.error(e);
+      throw new NotAcceptableException(e);
+    }
 
     if (gameInstance.isBettingRoundInProgress() === false)
       gameInstance.endBettingRound();
+
+    try {
+      gameInstance.showdown();
+      if (
+        gameInstance.seats()[0].totalChips === game.playerABalance &&
+        gameInstance.seats()[1].totalChips === game.playerBBalance
+      ) {
+        return {};
+      } else if (gameInstance.seats()[0].totalChips > game.playerABalance) {
+        // player 1 won
+      } else {
+        // player 2 won
+      }
+    } catch {}
+
+    const pot = gameInstance.pots()[0];
+    if (pot.eligiblePlayers.length === 1) {
+      // We have a winner
+
+      game = await this.gameModel.findOneAndUpdate(
+        {
+          _id: game.id,
+        },
+        pot.eligiblePlayers[0] === 0
+          ? {
+              playerABalance: game.playerABalance + pot.size,
+              playerBBalance: game.playerBBalance - pot.size,
+            }
+          : {
+              playerABalance: game.playerABalance + pot.size,
+              playerBBalance: game.playerBBalance - pot.size,
+            },
+      );
+
+      this.openedGames[takeActionDto.gameId] = new Table({
+        ante: 0,
+        smallBlind: 1,
+        bigBlind: 2,
+      });
+      gameInstance.sitDown(0, game.playerABalance);
+      gameInstance.sitDown(1, game.playerBBalance);
+      gameInstance.startHand();
+
+      return {
+        communityCards: gameInstance.communityCards(),
+        playerACards: [],
+        playerBCards: [],
+        winner: pot.eligiblePlayers[0] === 0 ? game.playerA : game.playerB,
+      };
+    } else {
+      await this.gameModel.updateOne(
+        {
+          _id: takeActionDto.gameId,
+        },
+        {
+          turnFor: game.turnFor === game.playerA ? game.playerB : game.playerA,
+        },
+      );
+
+      return {
+        communityCards: gameInstance.communityCards(),
+        playerACards: gameInstance.holeCards()[0],
+        playerBCards: gameInstance.holeCards()[1],
+        winner: null,
+      };
+    }
   }
 
-  async getGameStatus(gameId: string) {
+  private async getGameStatus(gameId: string) {
     if (!(gameId in this.openedGames))
       throw new NotFoundException(`Game #${gameId} not found`);
-
     const gameInstance = this.openedGames[gameId];
 
+    const game = await this.gameModel.findOne({
+      _id: gameId,
+    });
+    if (game === null) throw new NotFoundException(`Game #${gameId} not found`);
+
     return {
+      turnFor: game.turnFor,
       isBettingRoundInProgress: gameInstance.isBettingRoundInProgress(),
       isHandInProgress: gameInstance.isHandInProgress(),
       playerA: gameInstance.holeCards()[0],
