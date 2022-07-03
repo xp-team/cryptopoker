@@ -45,19 +45,36 @@ export class TelegramService {
       if (!update.message) continue;
 
       if (update.message.text === 'Available games') {
-        await this.telegram
-          .sendMessage({
-            chat_id: update.message.chat.id,
-            text: 'Available games:',
-            reply_markup: {
-              resize_keyboard: true,
-              force_reply: true,
-              keyboard: (
-                await this.gameService.games()
-              ).map((g) => [{ text: `Connect/${g.id}` }]),
-            },
-          })
-          .toPromise();
+        const games = await this.gameService.games();
+
+        if (games.length === 0)
+          await this.telegram
+            .sendMessage({
+              chat_id: update.message.chat.id,
+              text: `No available games. 
+Wait a little and try again or create one by your own`,
+              reply_markup: {
+                resize_keyboard: true,
+                force_reply: true,
+                keyboard: [
+                  [{ text: 'Available games' }],
+                  [{ text: 'Create game' }],
+                ],
+              },
+            })
+            .toPromise();
+        else
+          await this.telegram
+            .sendMessage({
+              chat_id: update.message.chat.id,
+              text: 'Available games:',
+              reply_markup: {
+                resize_keyboard: true,
+                force_reply: true,
+                keyboard: games.map((g) => [{ text: `Connect/${g.id}` }]),
+              },
+            })
+            .toPromise();
       } else if (update.message.text.startsWith('Connect/')) {
         /**
          * TODO: Add crypto hook (after all check below)
