@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  db:
+    image: mongo
+    restart: always
+    environment:
+      - MONGODB_DATABASE=poker
+  api:
+    build: .
+    ports:
+      - "3000:3000"
