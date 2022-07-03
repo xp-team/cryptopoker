@@ -136,6 +136,11 @@ Wait a little and try again or create one by your own`,
             chat_id: game.playerAChat,
             text: `Cards on the table: <no opened yet>
 Your cards: ${playerACards}
+---
+You put: ${res.playerABet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerAChips} TON
+---
 It's your turn`,
             reply_markup: {
               resize_keyboard: true,
@@ -154,6 +159,11 @@ It's your turn`,
             chat_id: game.playerBChat,
             text: `Cards on the table: <not opened yet>
 Your cards: ${playerBCards}
+---
+You put: ${res.playerBBet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerBChips} TON
+---
 It's opponent's turn`,
             reply_markup: {
               resize_keyboard: true,
@@ -229,10 +239,16 @@ It's opponent's turn`,
             await this.telegram
               .sendMessage({
                 chat_id: game.playerAChat,
-                text: `It's draw. 
-Started a new game. It's your turn.
+                text: `It's draw.
+---
+Started a new hand. It's your turn.
 Cards on the table: ${communityCards}
-Your cards: ${playerACards}`,
+Your cards: ${playerACards}
+---
+You put: ${res.playerABet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerAChips} TON
+`,
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -250,8 +266,14 @@ Your cards: ${playerACards}`,
                 chat_id: game.playerBChat,
                 text: `It's draw. 
 Started a new game. It's opponent's turn.
+---
 Cards on the table: ${communityCards}
-Your cards: ${playerBCards}`,
+Your cards: ${playerBCards}
+---
+You put: ${res.playerBBet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerBChips} TON
+`,
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -269,9 +291,15 @@ Your cards: ${playerBCards}`,
               .sendMessage({
                 chat_id: game.playerAChat,
                 text: `You won. 
-Started a new game. It's your turn.
+Started a new hand. It's your turn.
+---
 Cards on the table: ${communityCards}
-Your cards: ${playerACards}`,
+Your cards: ${playerACards}
+---
+You put: ${res.playerABet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerAChips} TON
+`,
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -288,9 +316,15 @@ Your cards: ${playerACards}`,
               .sendMessage({
                 chat_id: game.playerBChat,
                 text: `You lost. 
-Started a new game. It's opponent's turn.
+Started a new hand. It's opponent's turn.
+---
 Cards on the table: ${communityCards}
-Your cards: ${playerBCards}`,
+Your cards: ${playerBCards}
+---
+You put: ${res.playerBBet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerBChips} TON
+`,
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -308,9 +342,15 @@ Your cards: ${playerBCards}`,
               .sendMessage({
                 chat_id: game.playerAChat,
                 text: `You lost. 
-Started a new game. It's your turn.
+Started a new hand. It's your turn.
+---
 Cards on the table: ${communityCards}
-Your cards: ${playerACards}`,
+Your cards: ${playerACards}
+---
+You put: ${res.playerABet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerAChips} TON
+`,
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -327,9 +367,15 @@ Your cards: ${playerACards}`,
               .sendMessage({
                 chat_id: game.playerBChat,
                 text: `You won. 
-Started a new game. It's opponent's turn.
+Started a new hand. It's opponent's turn.
+---
 Cards on the table: ${communityCards}
-Your cards: ${playerBCards}`,
+Your cards: ${playerBCards}
+---
+You put: ${res.playerBBet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerBChips} TON
+`,
                 reply_markup: {
                   resize_keyboard: true,
                   keyboard: [
@@ -352,6 +398,11 @@ Your cards: ${playerBCards}`,
                     : "It's opponent's turn"
                 }.
 Cards on the table: ${communityCards}
+---
+You put: ${res.playerABet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerAChips} TON
+---
 Your cards: ${playerACards}`,
                 reply_markup: {
                   resize_keyboard: true,
@@ -374,6 +425,11 @@ Your cards: ${playerACards}`,
                     : "It's opponent's turn"
                 }.
 Cards on the table: ${communityCards}
+---
+You put: ${res.playerBBet} TON
+On the table: ${res.pot} TON
+Wallet: ${res.playerBChips} TON
+---
 Your cards: ${playerBCards}`,
                 reply_markup: {
                   resize_keyboard: true,

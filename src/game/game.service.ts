@@ -19,7 +19,13 @@ export interface IntermediateResult {
   communityCards: Card[];
   playerACards: Hand | null;
   playerBCards: Hand | null;
+  playerAChips: number;
+  playerBChips: number;
+  playerABet: number;
+  playerBBet: number;
   winner: number[];
+  winning: number;
+  pot: number;
 }
 
 @Injectable()
@@ -73,7 +79,13 @@ export class GameService {
       playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
       playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
       communityCards: _.cloneDeep(gameInstance.communityCards()),
+      playerAChips: gameInstance.seats()[0].totalChips,
+      playerBChips: gameInstance.seats()[1].totalChips,
+      playerABet: gameInstance.seats()[0].betSize,
+      playerBBet: gameInstance.seats()[1].betSize,
       winner: [],
+      winning: 0,
+      pot: 3,
     };
   }
 
@@ -113,16 +125,21 @@ export class GameService {
     if (gameInstance.isBettingRoundInProgress() === false)
       gameInstance.endBettingRound();
 
+    const potOnTable =
+      gameInstance.seats()[0].betSize + gameInstance.seats()[1].betSize;
+
     let playerACards: Hand | null = null;
     let playerBCards: Hand | null = null;
     let communityCards = [];
     const seatA = gameInstance.seats()[0];
     const seatB = gameInstance.seats()[1];
+    let winning = 0;
 
     try {
       playerACards = _.cloneDeep(gameInstance.holeCards()[0]);
       playerBCards = _.cloneDeep(gameInstance.holeCards()[1]);
       communityCards = _.cloneDeep(gameInstance.communityCards());
+      winning = gameInstance.pots()[0].size;
     } catch {}
 
     try {
@@ -146,6 +163,12 @@ export class GameService {
           playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
           playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
           communityCards: _.cloneDeep(gameInstance.communityCards()),
+          pot: 3,
+          playerAChips: gameInstance.seats()[0].totalChips,
+          playerBChips: gameInstance.seats()[1].totalChips,
+          playerABet: gameInstance.seats()[0].betSize,
+          playerBBet: gameInstance.seats()[1].betSize,
+          winning,
           winner: [game.playerA, game.playerB],
         };
       } else if (gameInstance.seats()[0].totalChips > game.playerABalance) {
@@ -155,6 +178,12 @@ export class GameService {
           playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
           playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
           communityCards: _.cloneDeep(gameInstance.communityCards()),
+          pot: 3,
+          playerAChips: gameInstance.seats()[0].totalChips,
+          playerBChips: gameInstance.seats()[1].totalChips,
+          playerABet: gameInstance.seats()[0].betSize,
+          playerBBet: gameInstance.seats()[1].betSize,
+          winning,
           winner: [game.playerA],
         };
       } else {
@@ -164,6 +193,12 @@ export class GameService {
           playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
           playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
           communityCards: _.cloneDeep(gameInstance.communityCards()),
+          pot: 3,
+          playerAChips: gameInstance.seats()[0].totalChips,
+          playerBChips: gameInstance.seats()[1].totalChips,
+          playerABet: gameInstance.seats()[0].betSize,
+          playerBBet: gameInstance.seats()[1].betSize,
+          winning,
           winner: [game.playerB],
         };
       }
@@ -194,7 +229,13 @@ export class GameService {
         playerACards: _.cloneDeep(gameInstance.holeCards()[0]),
         playerBCards: _.cloneDeep(gameInstance.holeCards()[1]),
         communityCards: _.cloneDeep(gameInstance.communityCards()),
+        playerAChips: gameInstance.seats()[0].totalChips,
+        playerBChips: gameInstance.seats()[1].totalChips,
+        playerABet: gameInstance.seats()[0].betSize,
+        playerBBet: gameInstance.seats()[1].betSize,
         winner: [pot.eligiblePlayers[0] === 0 ? game.playerA : game.playerB],
+        winning,
+        pot: 3,
       };
     } else {
       await this.gameModel.updateOne(
@@ -208,11 +249,19 @@ export class GameService {
         },
       );
 
+      console.log(gameInstance.seats());
+
       return {
         communityCards,
         playerACards,
         playerBCards,
+        playerAChips: gameInstance.seats()[0].totalChips,
+        playerBChips: gameInstance.seats()[1].totalChips,
+        playerABet: gameInstance.seats()[0].betSize,
+        playerBBet: gameInstance.seats()[1].betSize,
         winner: [],
+        winning: 0,
+        pot: potOnTable,
       };
     }
   }
