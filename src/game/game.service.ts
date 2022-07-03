@@ -16,15 +16,16 @@ export class GameService {
     @InjectModel(Game.name) private readonly gameModel: Model<GameDocument>,
   ) {}
 
-  games(): Promise<Game[]> {
+  games(): Promise<GameDocument[]> {
     return this.gameModel
       .find({ $or: [{ playerA: null }, { playerB: null }] })
       .exec();
   }
 
-  createGame(createGameDto: CreateGameDto): Promise<Game> {
+  createGame(createGameDto: CreateGameDto): Promise<GameDocument> {
     const createdGame = new this.gameModel({
       playerA: createGameDto.playerAId,
+      playerAChat: createGameDto.chatAId,
     });
     return createdGame.save();
   }
